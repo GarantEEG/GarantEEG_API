@@ -95,6 +95,10 @@ protected:
     char *m_FileWriteBuffer = nullptr;
     string m_SendBuffer;
 
+    EEG_ON_START_STATE_CHANGED *m_Callback_OnStartStateChanged = nullptr;
+    EEG_ON_RECORDING_STATE_CHANGED *m_Callback_OnRecordingStateChanged = nullptr;
+    EEG_ON_RECEIVED_DATA *m_Callback_OnReceivedData = nullptr;
+
 
 
     /**
@@ -170,11 +174,22 @@ public:
 
 
 
+    virtual void StartDataTranslation() override;
+    virtual void StopDataTranslation() override;
+
+
+
     virtual void SynchronizationWithNTP() override;
 
     virtual int GetBatteryStatus() const override { return m_BatteryStatus; }
 
     virtual const char *GetFirmwareVersion() const override { return m_FirmwareVersion.c_str(); }
+
+
+
+    virtual void SetCallback_OnStartStateChanged(EEG_ON_START_STATE_CHANGED *callback) override { m_Callback_OnStartStateChanged = callback; }
+    virtual void SetCallback_OnRecordingStateChanged(EEG_ON_RECORDING_STATE_CHANGED *callback) override { m_Callback_OnRecordingStateChanged = callback; }
+    virtual void SetCallback_ReceivedData(EEG_ON_RECEIVED_DATA *callback) override { m_Callback_OnReceivedData = callback; }
 };
 //----------------------------------------------------------------------------------
 } //namespace GarantEEG

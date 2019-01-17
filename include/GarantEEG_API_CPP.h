@@ -45,11 +45,23 @@ public:
 
 
 
+    virtual void StartDataTranslation() = 0;
+    virtual void StopDataTranslation() = 0;
+
+
+
     virtual void SynchronizationWithNTP() = 0;
 
     virtual int GetBatteryStatus() const = 0;
 
     virtual const char *GetFirmwareVersion() const = 0;
+
+
+
+    virtual void SetCallback_OnStartStateChanged(EEG_ON_START_STATE_CHANGED *callback) = 0;
+    virtual void SetCallback_OnRecordingStateChanged(EEG_ON_RECORDING_STATE_CHANGED *callback) = 0;
+    virtual void SetCallback_ReceivedData(EEG_ON_RECEIVED_DATA *callback) = 0;
+
 };
 //----------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////////

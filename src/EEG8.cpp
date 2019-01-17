@@ -117,8 +117,15 @@ string fixEdfString(string str, const uint &maxLength)
 //----------------------------------------------------------------------------------
 bool CEeg8::StartRecord(const char *userName, const char *filePath)
 {
-    if (!m_Started || m_Recording || m_File != nullptr || !m_HeaderData.size())
+    if (!m_Started || m_Recording || m_File != nullptr)
         return false;
+    else if (!m_HeaderData.size())
+    {
+        if (m_Callback_OnRecordingStateChanged != nullptr)
+            m_Callback_OnRecordingStateChanged(DRS_HEADER_NOT_FOUND);
+
+        return false;
+    }
 
     if (filePath != nullptr)
         m_RecordFileName = filePath;
@@ -168,6 +175,14 @@ bool CEeg8::StartRecord(const char *userName, const char *filePath)
         m_WrittenDataCount = 0;
         m_Recording = true;
         m_RecordPaused = false;
+
+        if (m_Callback_OnRecordingStateChanged != nullptr)
+            m_Callback_OnRecordingStateChanged(DRS_NO_ERROR);
+    }
+    else
+    {
+        if (m_Callback_OnRecordingStateChanged != nullptr)
+            m_Callback_OnRecordingStateChanged(DRS_CREATE_FILE_ERROR);
     }
 
     return m_Recording;
@@ -203,24 +218,64 @@ void CEeg8::StopRecord()
     m_File = nullptr;
     m_Recording = false;
     m_RecordPaused = false;
+
+    if (m_Callback_OnRecordingStateChanged != nullptr)
+        m_Callback_OnRecordingStateChanged(DRS_RECORD_STOPPED);
 }
 //----------------------------------------------------------------------------------
 void CEeg8::PauseRecord()
 {
     if (m_Started && m_Recording)
+    {
         m_RecordPaused = true;
+
+        if (m_Callback_OnRecordingStateChanged != nullptr)
+            m_Callback_OnRecordingStateChanged(DRS_RECORD_PAUSED);
+    }
 }
 //----------------------------------------------------------------------------------
 void CEeg8::ResumeRecord()
 {
     if (m_Started && m_Recording)
+    {
         m_RecordPaused = false;
+
+        if (m_Callback_OnRecordingStateChanged != nullptr)
+            m_Callback_OnRecordingStateChanged(DRS_RECORD_RESUMED);
+    }
+}
+//----------------------------------------------------------------------------------
+void CEeg8::StartDataTranslation()
+{
+    if (m_Started && !m_Recording)
+    {
+        if (m_ProtectedMode)
+            SendPacket("start -protect eeg.rate " + std::to_string(m_Rate) + "\r\n");
+        else
+            SendPacket("start eeg.rate " + std::to_string(m_Rate) + "\r\n");
+    }
+}
+//----------------------------------------------------------------------------------
+void CEeg8::StopDataTranslation()
+{
+    if (m_Started && !m_Recording)
+    {
+        SendPacket("stop\r\n");
+
+        if (m_Callback_OnStartStateChanged != nullptr)
+            m_Callback_OnStartStateChanged(DCS_TRANSLATION_PAUSED);
+    }
 }
 //----------------------------------------------------------------------------------
 void CEeg8::SynchronizationWithNTP()
 {
     if (m_Started)
+    {
         SendPacket("sync\r\n");
+
+        if (m_Callback_OnStartStateChanged != nullptr)
+            m_Callback_OnStartStateChanged(DCS_TRANSLATION_RESUMED);
+    }
 }
 //----------------------------------------------------------------------------------
 void CEeg8::SocketThreadFunction()
@@ -239,6 +294,10 @@ void CEeg8::SocketThreadFunction()
     {
         m_ConnectionStage = CS_SOCKET_CREATION_ERROR;
         m_Started = false;
+
+        if (m_Callback_OnStartStateChanged != nullptr)
+            m_Callback_OnStartStateChanged(DCS_CREATE_SOCKET_ERROR);
+
         return;
     }
 
@@ -260,6 +319,10 @@ void CEeg8::SocketThreadFunction()
         {
             m_Socket = INVALID_SOCKET;
             m_ConnectionStage = CS_HOST_DETECTION_ERROR;
+
+            if (m_Callback_OnStartStateChanged != nullptr)
+                m_Callback_OnStartStateChanged(DCS_HOST_NOT_FOUND);
+
             return;
         }
 
@@ -303,10 +366,17 @@ void CEeg8::SocketThreadFunction()
         closesocket(m_Socket);
         m_Socket = INVALID_SOCKET;
         m_ConnectionStage = CS_CONNECTION_ERROR;
+
+        if (m_Callback_OnStartStateChanged != nullptr)
+            m_Callback_OnStartStateChanged(DCS_HOST_NOT_REACHED);
+
         return;
     }
 
     m_ConnectionStage = CS_CONNECTED;
+
+    if (m_Callback_OnStartStateChanged != nullptr)
+        m_Callback_OnStartStateChanged(DCS_NO_ERROR);
 
     const int maxSize = 65535;
     vector<char> buf(maxSize + 1);
@@ -332,6 +402,10 @@ void CEeg8::SocketThreadFunction()
         if (dataReady == SOCKET_ERROR)
         {
             qDebug() << "ReadyRead SOCKET_ERROR";
+
+            if (m_Callback_OnStartStateChanged != nullptr)
+                m_Callback_OnStartStateChanged(DCS_RECEIVE_ERROR);
+
             break;
         }
         else if (dataReady != 0)
@@ -349,6 +423,10 @@ void CEeg8::SocketThreadFunction()
             else
             {
                 qDebug() << "Receiving error, size:" << size;
+
+                if (m_Callback_OnStartStateChanged != nullptr)
+                    m_Callback_OnStartStateChanged(DCS_RECEIVE_ERROR);
+
                 break;
             }
         }
@@ -358,6 +436,9 @@ void CEeg8::SocketThreadFunction()
 
     closesocket(m_Socket);
     m_Socket = INVALID_SOCKET;
+
+    if (m_Callback_OnStartStateChanged != nullptr)
+        m_Callback_OnStartStateChanged(DCS_CONNECTION_CLOSED);
 }
 //----------------------------------------------------------------------------------
 GARANT_EEG_PACKET_VALIDATE_TYPE CEeg8::ValidatePacket(unsigned char *buf, int size, const int &wantType)
