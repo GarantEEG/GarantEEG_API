@@ -139,10 +139,10 @@ typedef void __cdecl EEG_ON_START_STATE_CHANGED(unsigned int /*state*/);
 typedef void __cdecl EEG_ON_RECORDING_STATE_CHANGED(unsigned int /*state*/);
 //----------------------------------------------------------------------------------
 /**
- * @brief EEG_ON_RECEIVED_DATA
- * @param eegData
+ * @brief EEG_ON_RECEIVED_DATA Emitted on new data received
+ * @param eegData EEG data
  */
-typedef void __cdecl EEG_ON_RECEIVED_DATA(const GARANT_EEG_DATA *eegData);
+typedef void __cdecl EEG_ON_RECEIVED_DATA(const GARANT_EEG_DATA* /*eegData*/);
 //----------------------------------------------------------------------------------
 } //namespace GarantEEG
 //----------------------------------------------------------------------------------

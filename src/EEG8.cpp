@@ -42,6 +42,7 @@ bool CEeg8::Start(bool waitForConnection, int rate, bool protectedMode, const ch
     m_Started = false;
     m_Recording = false;
     m_RecordPaused = false;
+    m_TranslationPaused = false;
     m_Rate = rate;
 
     switch (m_Rate)
@@ -95,6 +96,7 @@ void CEeg8::Stop()
     StopRecord();
 
     m_Started = false;
+    m_TranslationPaused = false;
 
     if (m_Thread.joinable())
         m_Thread.join();
@@ -117,7 +119,7 @@ string fixEdfString(string str, const uint &maxLength)
 //----------------------------------------------------------------------------------
 bool CEeg8::StartRecord(const char *userName, const char *filePath)
 {
-    if (!m_Started || m_Recording || m_File != nullptr)
+    if (!m_Started || m_Recording || m_TranslationPaused || m_File != nullptr)
         return false;
     else if (!m_HeaderData.size())
     {
@@ -190,7 +192,7 @@ bool CEeg8::StartRecord(const char *userName, const char *filePath)
 //----------------------------------------------------------------------------------
 void CEeg8::StopRecord()
 {
-    if (!m_Started || !m_Recording || m_File == nullptr)
+    if (!m_Started || !m_Recording || m_TranslationPaused || m_File == nullptr)
         return;
 
     if (m_CurrentWriteBufferDataSize > 0 && m_FileWriteBuffer != nullptr)
@@ -247,20 +249,26 @@ void CEeg8::ResumeRecord()
 //----------------------------------------------------------------------------------
 void CEeg8::StartDataTranslation()
 {
-    if (m_Started && !m_Recording)
+    if (m_Started && !m_Recording && m_TranslationPaused)
     {
         if (m_ProtectedMode)
             SendPacket("start -protect eeg.rate " + std::to_string(m_Rate) + "\r\n");
         else
             SendPacket("start eeg.rate " + std::to_string(m_Rate) + "\r\n");
+
+        m_TranslationPaused = false;
+
+        if (m_Callback_OnStartStateChanged != nullptr)
+            m_Callback_OnStartStateChanged(DCS_TRANSLATION_RESUMED);
     }
 }
 //----------------------------------------------------------------------------------
 void CEeg8::StopDataTranslation()
 {
-    if (m_Started && !m_Recording)
+    if (m_Started && !m_Recording && !m_TranslationPaused)
     {
         SendPacket("stop\r\n");
+        m_TranslationPaused = true;
 
         if (m_Callback_OnStartStateChanged != nullptr)
             m_Callback_OnStartStateChanged(DCS_TRANSLATION_PAUSED);
@@ -270,12 +278,7 @@ void CEeg8::StopDataTranslation()
 void CEeg8::SynchronizationWithNTP()
 {
     if (m_Started)
-    {
         SendPacket("sync\r\n");
-
-        if (m_Callback_OnStartStateChanged != nullptr)
-            m_Callback_OnStartStateChanged(DCS_TRANSLATION_RESUMED);
-    }
 }
 //----------------------------------------------------------------------------------
 void CEeg8::SocketThreadFunction()
@@ -390,7 +393,7 @@ void CEeg8::SocketThreadFunction()
 
     while (m_Started)
     {
-        qDebug() << "sleeping...";
+        //qDebug() << "sleeping...";
 
         fd_set rfds;
         struct timeval tv = { 0, 0 };
@@ -415,7 +418,7 @@ void CEeg8::SocketThreadFunction()
             if (size > 0)
             {
                 buf[size] = 0;
-                qDebug() << "Receiving, size:" << size << &buf[0];
+                qDebug() << "Receiving, size:" << size; // << &buf[0];
                 m_RecvBuffer.insert(m_RecvBuffer.end(), buf.begin(), buf.begin() + size);
 
                 DataReceived();
@@ -431,7 +434,7 @@ void CEeg8::SocketThreadFunction()
             }
         }
 
-        Sleep(500);
+        Sleep(10);
     }
 
     closesocket(m_Socket);
@@ -749,6 +752,9 @@ void CEeg8::ProcessData(unsigned char *buf, const int &size)
             //qDebug() << "Block's Time:" << (quint64)frameData.Time;
         }
     }
+
+    if (m_Callback_OnReceivedData != nullptr)
+        m_Callback_OnReceivedData(&frameData);
 }
 //----------------------------------------------------------------------------------
 } //namespace GarantEEG

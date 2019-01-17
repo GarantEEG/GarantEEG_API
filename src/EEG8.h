@@ -65,6 +65,7 @@ protected:
 
     CONNECTION_STAGE m_ConnectionStage = CS_NONE;
     bool m_Started = false;
+    bool m_TranslationPaused = false;
     bool m_Recording = false;
     bool m_RecordPaused = false;
     thread m_Thread;
