@@ -34,6 +34,7 @@ public:
     virtual bool Start(bool waitForConnection = true, int rate = 500, bool protectedMode = true, const char *host = "192.168.127.125", int port = 12345) = 0;
     virtual void Stop() = 0;
     virtual bool IsStarted() const = 0;
+    virtual bool IsPaused() const = 0;
 
     virtual bool StartRecord(const char *userName, const char *filePath = nullptr) = 0;
     virtual void StopRecord() = 0;

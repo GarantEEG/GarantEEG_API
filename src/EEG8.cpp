@@ -139,11 +139,12 @@ bool CEeg8::StartRecord(const char *userName, const char *filePath)
         std::string directory = buff;
         directory += "/SaveData";
         CreateDirectoryA(directory.c_str(), nullptr);
+        directory = directory.c_str();
 
         SYSTEMTIME st;
         GetLocalTime(&st);
 
-        sprintf_s(buff, "/EegRecord_%i.%i.%i___%i.%i.%i.bdf", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+        sprintf(buff, "/EegRecord_%i.%i.%i___%i.%i.%i.bdf", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
         m_RecordFileName = directory + buff;
     }
@@ -153,6 +154,8 @@ bool CEeg8::StartRecord(const char *userName, const char *filePath)
         delete[] m_FileWriteBuffer;
         m_FileWriteBuffer = nullptr;
     }
+
+    qDebug() << "start recording in" << m_RecordFileName.c_str();
 
     m_File = fopen(m_RecordFileName.c_str(), "wb");
 

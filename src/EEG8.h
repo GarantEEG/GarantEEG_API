@@ -164,6 +164,7 @@ public:
     virtual bool Start(bool waitForConnection = true, int rate = 500, bool protectedMode = true, const char *host = "192.168.127.125", int port = 12345) override;
     virtual void Stop() override;
     virtual bool IsStarted() const override { return m_Started; }
+    virtual bool IsPaused() const override { return m_TranslationPaused; }
 
     virtual bool StartRecord(const char *userName, const char *filePath = nullptr) override;
     virtual void StopRecord() override;
