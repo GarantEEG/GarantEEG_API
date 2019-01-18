@@ -33,7 +33,8 @@ enum CONNECTION_STAGE
     CS_CONNECTED,
     CS_SOCKET_CREATION_ERROR,
     CS_HOST_DETECTION_ERROR,
-    CS_CONNECTION_ERROR
+    CS_CONNECTION_ERROR,
+    CS_START_RECONNECTING
 };
 //----------------------------------------------------------------------------------
 enum GARANT_EEG_PACKET_VALIDATE_TYPE
@@ -87,6 +88,7 @@ protected:
     int m_DataSize = 0;
     bool m_IgnoreCounter = false;
     int m_PrevCounter = 0;
+    bool m_EnableAutoreconnection = true;
 
     vector<string> m_ChannelNames;
 
@@ -96,8 +98,11 @@ protected:
     char *m_FileWriteBuffer = nullptr;
     string m_SendBuffer;
 
+    void *m_CallbackUserData_OnStartStateChanged = nullptr;
     EEG_ON_START_STATE_CHANGED *m_Callback_OnStartStateChanged = nullptr;
+    void *m_CallbackUserData_OnRecordingStateChanged = nullptr;
     EEG_ON_RECORDING_STATE_CHANGED *m_Callback_OnRecordingStateChanged = nullptr;
+    void *m_CallbackUserData_OnReceivedData = nullptr;
     EEG_ON_RECEIVED_DATA *m_Callback_OnReceivedData = nullptr;
 
 
@@ -149,7 +154,7 @@ public:
     CEeg8();
     virtual ~CEeg8();
 
-    void SocketThreadFunction();
+    void SocketThreadFunction(int depth);
 
 
 
@@ -174,6 +179,9 @@ public:
     virtual void ResumeRecord() override;
     virtual bool IsRecordPaused() const override { return m_RecordPaused; }
 
+    virtual void SetAutoReconnection(bool enable) override { m_EnableAutoreconnection = enable; }
+    virtual bool AutoReconnectionEnabled() const override { return m_EnableAutoreconnection; }
+
 
 
     virtual void StartDataTranslation() override;
@@ -189,9 +197,9 @@ public:
 
 
 
-    virtual void SetCallback_OnStartStateChanged(EEG_ON_START_STATE_CHANGED *callback) override { m_Callback_OnStartStateChanged = callback; }
-    virtual void SetCallback_OnRecordingStateChanged(EEG_ON_RECORDING_STATE_CHANGED *callback) override { m_Callback_OnRecordingStateChanged = callback; }
-    virtual void SetCallback_ReceivedData(EEG_ON_RECEIVED_DATA *callback) override { m_Callback_OnReceivedData = callback; }
+    virtual void SetCallback_OnStartStateChanged(void *userData, EEG_ON_START_STATE_CHANGED *callback) override;
+    virtual void SetCallback_OnRecordingStateChanged(void *userData, EEG_ON_RECORDING_STATE_CHANGED *callback) override;
+    virtual void SetCallback_ReceivedData(void *userData, EEG_ON_RECEIVED_DATA *callback) override;
 };
 //----------------------------------------------------------------------------------
 } //namespace GarantEEG

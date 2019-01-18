@@ -130,19 +130,19 @@ struct GARANT_EEG_DATA
  * @brief EEG_ON_START_STATE_CHANGED Emitted on device connection state changed
  * @param State from GARANT_EEG_DEVICE_CONNECTION_STATE
  */
-typedef void __cdecl EEG_ON_START_STATE_CHANGED(unsigned int /*state*/);
+typedef void __cdecl EEG_ON_START_STATE_CHANGED(void* /*userData*/, unsigned int /*state*/);
 //----------------------------------------------------------------------------------
 /**
  * @brief EEG_ON_RECORDING_STATE_CHANGED Emitted on device recording state changed
  * @param State from GARANT_EEG_DEVICE_RECORDING_STATE
  */
-typedef void __cdecl EEG_ON_RECORDING_STATE_CHANGED(unsigned int /*state*/);
+typedef void __cdecl EEG_ON_RECORDING_STATE_CHANGED(void* /*userData*/, unsigned int /*state*/);
 //----------------------------------------------------------------------------------
 /**
  * @brief EEG_ON_RECEIVED_DATA Emitted on new data received
  * @param eegData EEG data
  */
-typedef void __cdecl EEG_ON_RECEIVED_DATA(const GARANT_EEG_DATA* /*eegData*/);
+typedef void __cdecl EEG_ON_RECEIVED_DATA(void* /*userData*/, const GARANT_EEG_DATA* /*eegData*/);
 //----------------------------------------------------------------------------------
 } //namespace GarantEEG
 //----------------------------------------------------------------------------------

@@ -44,6 +44,9 @@ public:
     virtual void ResumeRecord() = 0;
     virtual bool IsRecordPaused() const = 0;
 
+    virtual void SetAutoReconnection(bool enable) = 0;
+    virtual bool AutoReconnectionEnabled() const = 0;
+
 
 
     virtual void StartDataTranslation() = 0;
@@ -59,9 +62,9 @@ public:
 
 
 
-    virtual void SetCallback_OnStartStateChanged(EEG_ON_START_STATE_CHANGED *callback) = 0;
-    virtual void SetCallback_OnRecordingStateChanged(EEG_ON_RECORDING_STATE_CHANGED *callback) = 0;
-    virtual void SetCallback_ReceivedData(EEG_ON_RECEIVED_DATA *callback) = 0;
+    virtual void SetCallback_OnStartStateChanged(void *userData, EEG_ON_START_STATE_CHANGED *callback) = 0;
+    virtual void SetCallback_OnRecordingStateChanged(void *userData, EEG_ON_RECORDING_STATE_CHANGED *callback) = 0;
+    virtual void SetCallback_ReceivedData(void *userData, EEG_ON_RECEIVED_DATA *callback) = 0;
 
 };
 //----------------------------------------------------------------------------------
