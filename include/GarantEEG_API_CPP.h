@@ -54,7 +54,19 @@ public:
 
 
 
+    virtual void SetRxThreshold(int value) = 0;
+    virtual void StartIndicationTest() = 0;
+    virtual void StopIndicationTest() = 0;
+
+
+
+    virtual void PowerOff() = 0;
+
     virtual void SynchronizationWithNTP() = 0;
+
+    virtual bool IsProtectedMode() const = 0;
+
+    virtual int GetRate() const = 0;
 
     virtual int GetBatteryStatus() const = 0;
 

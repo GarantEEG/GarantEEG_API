@@ -9,6 +9,7 @@
 #include "src/EEG8.h"
 #include <windows.h>
 #include "../../../components/rapidjson/document.h"
+#include "Filtering/ButterworthFilter.hpp"
 #include <QDebug>
 //----------------------------------------------------------------------------------
 namespace GarantEEG
@@ -25,10 +26,22 @@ CEeg8::CEeg8()
     m_ChannelNames.push_back("P4");
     m_ChannelNames.push_back("O2");
     m_ChannelNames.push_back("Po8");
+
+    m_Filter = new CButterworthFilter<1>();
 }
 //----------------------------------------------------------------------------------
 CEeg8::~CEeg8()
 {
+    RemoveFilter();
+}
+//----------------------------------------------------------------------------------
+void CEeg8::RemoveFilter()
+{
+    if (m_Filter != nullptr)
+    {
+        delete m_Filter;
+        m_Filter = nullptr;
+    }
 }
 //----------------------------------------------------------------------------------
 bool CEeg8::Start(bool waitForConnection, int rate, bool protectedMode, const char *host, int port)
@@ -276,6 +289,37 @@ void CEeg8::StopDataTranslation()
         if (m_Callback_OnStartStateChanged != nullptr)
             m_Callback_OnStartStateChanged(m_CallbackUserData_OnStartStateChanged, DCS_TRANSLATION_PAUSED);
     }
+}
+//----------------------------------------------------------------------------------
+void CEeg8::SetRxThreshold(int value)
+{
+    if (m_Started)
+    {
+        if (value < 10)
+            value = 10;
+        else if (value > 300)
+            value = 300;
+
+        SendPacket("set rx.ths" + std::to_string(value) + "\r\n");
+    }
+}
+//----------------------------------------------------------------------------------
+void CEeg8::StartIndicationTest()
+{
+    if (m_Started)
+        SendPacket("device indication test ON\r\n");
+}
+//----------------------------------------------------------------------------------
+void CEeg8::StopIndicationTest()
+{
+    if (m_Started)
+        SendPacket("device indication test OFF\r\n");
+}
+//----------------------------------------------------------------------------------
+void CEeg8::PowerOff()
+{
+    if (m_Started)
+        SendPacket("device powerdown\r\n");
 }
 //----------------------------------------------------------------------------------
 void CEeg8::SynchronizationWithNTP()

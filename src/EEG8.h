@@ -23,6 +23,8 @@ using std::thread;
 #include <winsock.h>
 #include <mutex>
 //----------------------------------------------------------------------------------
+#include "Filtering/BaseFilter.h"
+//----------------------------------------------------------------------------------
 namespace GarantEEG
 {
 //----------------------------------------------------------------------------------
@@ -98,6 +100,8 @@ protected:
     char *m_FileWriteBuffer = nullptr;
     string m_SendBuffer;
 
+    CBaseFilter *m_Filter = nullptr;
+
     void *m_CallbackUserData_OnStartStateChanged = nullptr;
     EEG_ON_START_STATE_CHANGED *m_Callback_OnStartStateChanged = nullptr;
     void *m_CallbackUserData_OnRecordingStateChanged = nullptr;
@@ -150,6 +154,8 @@ protected:
      */
     void ProcessData(unsigned char *buf, const int &size);
 
+    void RemoveFilter();
+
 public:
     CEeg8();
     virtual ~CEeg8();
@@ -189,7 +195,19 @@ public:
 
 
 
+    virtual void SetRxThreshold(int value) override;
+    virtual void StartIndicationTest() override;
+    virtual void StopIndicationTest() override;
+
+
+
+    virtual void PowerOff() override;
+
     virtual void SynchronizationWithNTP() override;
+
+    virtual bool IsProtectedMode() const override { return m_ProtectedMode; }
+
+    virtual int GetRate() const override { return m_Rate; }
 
     virtual int GetBatteryStatus() const override { return m_BatteryStatus; }
 
