@@ -1,30 +1,35 @@
 /**
-@file BaseFilter.h
+@file AbstractFilter.h
 
-@brief Базовый класс для работы с фильтрами
+@brief Абстрактный класс для работы с фильтрами
 
 @author Мустакимов Т.Р.
 **/
 //----------------------------------------------------------------------------------
-#ifndef BASEFILTER_H
-#define BASEFILTER_H
+#ifndef ABSTRACTFILTER_H
+#define ABSTRACTFILTER_H
 //----------------------------------------------------------------------------------
-#include "AbstractFilter.h"
+#include "../GarantEEG_API/include/GarantEEG_API_Types.h"
 //----------------------------------------------------------------------------------
 namespace GarantEEG
 {
 //----------------------------------------------------------------------------------
-class CBaseFilter : public CAbstractFilter
+class CAbstractFilter
 {
 public:
-    virtual ~CBaseFilter() {}
+    virtual ~CAbstractFilter() {}
 
-    virtual void Setup(int rate, int lowFrequency, int hightFrequency) = 0;
+    virtual int Type() const = 0;
+    virtual int Order() const = 0;
+    virtual int ChannelsCount() const = 0;
+    virtual const int *ChannelsList() const = 0;
 
-    virtual void Process(int count, float **samples) = 0;
+    virtual int Rate() const = 0;
+    virtual int LowFrequency() const = 0;
+    virtual int HightFrequency() const = 0;
 };
 //----------------------------------------------------------------------------------
 } //namespace GarantEEG
 //----------------------------------------------------------------------------------
-#endif // BASEFILTER_H
+#endif // ABSTRACTFILTER_H
 //----------------------------------------------------------------------------------

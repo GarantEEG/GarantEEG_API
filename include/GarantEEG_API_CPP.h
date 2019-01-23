@@ -10,6 +10,7 @@
 #define GARANT_EEG_API_CPP_H
 //----------------------------------------------------------------------------------
 #include "GarantEEG_API_Types.h"
+#include "../src/Filtering/AbstractFilter.h"
 //----------------------------------------------------------------------------------
 //! global namespace
 namespace GarantEEG
@@ -71,6 +72,16 @@ public:
     virtual int GetBatteryStatus() const = 0;
 
     virtual const char *GetFirmwareVersion() const = 0;
+
+
+
+    virtual int GetFiltersCount() const = 0;
+    virtual const CAbstractFilter** GetFilters() = 0;
+    virtual const CAbstractFilter* AddFilter(int type, int order) = 0;
+    virtual const CAbstractFilter* AddFilter(int type, int order, int channelsCount, const int *channelsList) = 0;
+    virtual bool SetupFilter(CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency) = 0;
+    virtual void RemoveFilter(CAbstractFilter *filter) = 0;
+    virtual void RemoveAllFilters() = 0;
 
 
 

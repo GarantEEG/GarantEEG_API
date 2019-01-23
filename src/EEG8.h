@@ -100,7 +100,7 @@ protected:
     char *m_FileWriteBuffer = nullptr;
     string m_SendBuffer;
 
-    CBaseFilter *m_Filter = nullptr;
+    std::vector<CBaseFilter*> m_Filters;
 
     void *m_CallbackUserData_OnStartStateChanged = nullptr;
     EEG_ON_START_STATE_CHANGED *m_Callback_OnStartStateChanged = nullptr;
@@ -153,8 +153,6 @@ protected:
      * @param size Размер данных
      */
     void ProcessData(unsigned char *buf, const int &size);
-
-    void RemoveFilter();
 
 public:
     CEeg8();
@@ -212,6 +210,16 @@ public:
     virtual int GetBatteryStatus() const override { return m_BatteryStatus; }
 
     virtual const char *GetFirmwareVersion() const override { return m_FirmwareVersion.c_str(); }
+
+
+
+    virtual int GetFiltersCount() const override { return m_Filters.size(); }
+    virtual const CAbstractFilter** GetFilters() override;
+    virtual const CAbstractFilter* AddFilter(int type, int order) override;
+    virtual const CAbstractFilter* AddFilter(int type, int order, int channelsCount, const int *channelsList) override;
+    virtual bool SetupFilter(CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency) override;
+    virtual void RemoveFilter(CAbstractFilter *filter) override;
+    virtual void RemoveAllFilters() override;
 
 
 

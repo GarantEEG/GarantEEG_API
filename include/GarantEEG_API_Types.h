@@ -27,6 +27,15 @@ enum GARANT_EEG_DEVICE_TYPE
     DT_GARANT_MAP_V2
 };
 //----------------------------------------------------------------------------------
+//! Main filter types
+enum GARANT_EEG_FILTER_TYPE
+{
+    //! Unknown filter
+    FT_UNKNOWN = 0,
+    //! Butterworth frequency filter
+    FT_BUTTERWORTH
+};
+//----------------------------------------------------------------------------------
 //! Device connection state
 enum GARANT_EEG_DEVICE_CONNECTION_STATE
 {

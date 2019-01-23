@@ -7,7 +7,6 @@ LIBS += -lwsock32
 SOURCES += \
     $$PWD/src/EEG8.cpp \
     $$PWD/src/GarantEEG_API_CPP.cpp \
-    $$PWD/src/Filtering/BaseFilter.cpp \
     $$PWD/src/Filtering/dspfilter/Bessel.cpp \
     $$PWD/src/Filtering/dspfilter/Biquad.cpp \
     $$PWD/src/Filtering/dspfilter/Butterworth.cpp \
@@ -54,4 +53,5 @@ HEADERS  += $$PWD/include/GarantEEG_API_Types.h \
     $$PWD/src/Filtering/dspfilter/State.h \
     $$PWD/src/Filtering/dspfilter/Types.h \
     $$PWD/src/Filtering/dspfilter/Utilities.h \
-    $$PWD/src/Filtering/ButterworthFilter.hpp
+    $$PWD/src/Filtering/ButterworthFilter.hpp \
+    $$PWD/src/Filtering/AbstractFilter.h

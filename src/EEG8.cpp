@@ -27,21 +27,14 @@ CEeg8::CEeg8()
     m_ChannelNames.push_back("O2");
     m_ChannelNames.push_back("Po8");
 
-    m_Filter = new CButterworthFilter<1>();
+    /*CBaseFilter *filter = CButterworthFilter<1>::Create(1);
+    filter->Setup(500, 1, 20);
+    m_Filters.push_back(filter);*/
 }
 //----------------------------------------------------------------------------------
 CEeg8::~CEeg8()
 {
-    RemoveFilter();
-}
-//----------------------------------------------------------------------------------
-void CEeg8::RemoveFilter()
-{
-    if (m_Filter != nullptr)
-    {
-        delete m_Filter;
-        m_Filter = nullptr;
-    }
+    RemoveAllFilters();
 }
 //----------------------------------------------------------------------------------
 bool CEeg8::Start(bool waitForConnection, int rate, bool protectedMode, const char *host, int port)
@@ -326,6 +319,135 @@ void CEeg8::SynchronizationWithNTP()
 {
     if (m_Started)
         SendPacket("sync\r\n");
+}
+//----------------------------------------------------------------------------------
+const CAbstractFilter** CEeg8::GetFilters()
+{
+    if (m_Filters.empty())
+        return nullptr;
+
+    return (const CAbstractFilter**)&m_Filters[0];
+}
+//----------------------------------------------------------------------------------
+const CAbstractFilter* CEeg8::AddFilter(int type, int order)
+{
+    const int channelsCount = 8;
+    const int channelsList[channelsCount] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+    return AddFilter(type, order, channelsCount, channelsList);
+}
+//----------------------------------------------------------------------------------
+const CAbstractFilter* CEeg8::AddFilter(int type, int order, int channelsCount, const int *channelsList)
+{
+    CBaseFilter *filter = nullptr;
+
+    //for (int i = 1; i <= 52; i++) qDebug("case %i: filter = CButterworthFilter<1, %i>::Create(order, channelsList); break;", i, i);
+
+    if (type == FT_BUTTERWORTH)
+    {
+        switch (channelsCount)
+        {
+            case 1: filter = CButterworthFilter<1, 1>::Create(order, channelsList); break;
+            case 2: filter = CButterworthFilter<1, 2>::Create(order, channelsList); break;
+            case 3: filter = CButterworthFilter<1, 3>::Create(order, channelsList); break;
+            case 4: filter = CButterworthFilter<1, 4>::Create(order, channelsList); break;
+            case 5: filter = CButterworthFilter<1, 5>::Create(order, channelsList); break;
+            case 6: filter = CButterworthFilter<1, 6>::Create(order, channelsList); break;
+            case 7: filter = CButterworthFilter<1, 7>::Create(order, channelsList); break;
+            case 8: filter = CButterworthFilter<1, 8>::Create(order, channelsList); break;
+            case 9: filter = CButterworthFilter<1, 9>::Create(order, channelsList); break;
+            case 10: filter = CButterworthFilter<1, 10>::Create(order, channelsList); break;
+            case 11: filter = CButterworthFilter<1, 11>::Create(order, channelsList); break;
+            case 12: filter = CButterworthFilter<1, 12>::Create(order, channelsList); break;
+            case 13: filter = CButterworthFilter<1, 13>::Create(order, channelsList); break;
+            case 14: filter = CButterworthFilter<1, 14>::Create(order, channelsList); break;
+            case 15: filter = CButterworthFilter<1, 15>::Create(order, channelsList); break;
+            case 16: filter = CButterworthFilter<1, 16>::Create(order, channelsList); break;
+            case 17: filter = CButterworthFilter<1, 17>::Create(order, channelsList); break;
+            case 18: filter = CButterworthFilter<1, 18>::Create(order, channelsList); break;
+            case 19: filter = CButterworthFilter<1, 19>::Create(order, channelsList); break;
+            case 20: filter = CButterworthFilter<1, 20>::Create(order, channelsList); break;
+            case 21: filter = CButterworthFilter<1, 21>::Create(order, channelsList); break;
+            case 22: filter = CButterworthFilter<1, 22>::Create(order, channelsList); break;
+            case 23: filter = CButterworthFilter<1, 23>::Create(order, channelsList); break;
+            case 24: filter = CButterworthFilter<1, 24>::Create(order, channelsList); break;
+            case 25: filter = CButterworthFilter<1, 25>::Create(order, channelsList); break;
+            case 26: filter = CButterworthFilter<1, 26>::Create(order, channelsList); break;
+            case 27: filter = CButterworthFilter<1, 27>::Create(order, channelsList); break;
+            case 28: filter = CButterworthFilter<1, 28>::Create(order, channelsList); break;
+            case 29: filter = CButterworthFilter<1, 29>::Create(order, channelsList); break;
+            case 30: filter = CButterworthFilter<1, 30>::Create(order, channelsList); break;
+            case 31: filter = CButterworthFilter<1, 31>::Create(order, channelsList); break;
+            case 32: filter = CButterworthFilter<1, 32>::Create(order, channelsList); break;
+            case 33: filter = CButterworthFilter<1, 33>::Create(order, channelsList); break;
+            case 34: filter = CButterworthFilter<1, 34>::Create(order, channelsList); break;
+            case 35: filter = CButterworthFilter<1, 35>::Create(order, channelsList); break;
+            case 36: filter = CButterworthFilter<1, 36>::Create(order, channelsList); break;
+            case 37: filter = CButterworthFilter<1, 37>::Create(order, channelsList); break;
+            case 38: filter = CButterworthFilter<1, 38>::Create(order, channelsList); break;
+            case 39: filter = CButterworthFilter<1, 39>::Create(order, channelsList); break;
+            case 40: filter = CButterworthFilter<1, 40>::Create(order, channelsList); break;
+            case 41: filter = CButterworthFilter<1, 41>::Create(order, channelsList); break;
+            case 42: filter = CButterworthFilter<1, 42>::Create(order, channelsList); break;
+            case 43: filter = CButterworthFilter<1, 43>::Create(order, channelsList); break;
+            case 44: filter = CButterworthFilter<1, 44>::Create(order, channelsList); break;
+            case 45: filter = CButterworthFilter<1, 45>::Create(order, channelsList); break;
+            case 46: filter = CButterworthFilter<1, 46>::Create(order, channelsList); break;
+            case 47: filter = CButterworthFilter<1, 47>::Create(order, channelsList); break;
+            case 48: filter = CButterworthFilter<1, 48>::Create(order, channelsList); break;
+            case 49: filter = CButterworthFilter<1, 49>::Create(order, channelsList); break;
+            case 50: filter = CButterworthFilter<1, 50>::Create(order, channelsList); break;
+            case 51: filter = CButterworthFilter<1, 51>::Create(order, channelsList); break;
+            case 52: filter = CButterworthFilter<1, 52>::Create(order, channelsList); break;
+            default:
+                break;
+        }
+    }
+
+    if (filter != nullptr)
+        m_Filters.push_back(filter);
+
+    return filter;
+}
+//----------------------------------------------------------------------------------
+bool CEeg8::SetupFilter(CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency)
+{
+    if (filter == nullptr)
+        return false;
+
+    for (std::vector<CBaseFilter*>::iterator i = m_Filters.begin(); i != m_Filters.end(); ++i)
+    {
+        if (filter == *i)
+        {
+            (*i)->Setup(rate, lowFrequency, hightFrequency);
+            return true;
+        }
+    }
+
+    return false;
+}
+//----------------------------------------------------------------------------------
+void CEeg8::RemoveFilter(CAbstractFilter *filter)
+{
+    for (std::vector<CBaseFilter*>::iterator i = m_Filters.begin(); i != m_Filters.end(); ++i)
+    {
+        if (filter == *i)
+        {
+            m_Filters.erase(i);
+            delete filter;
+        }
+    }
+}
+//----------------------------------------------------------------------------------
+void CEeg8::RemoveAllFilters()
+{
+    for (CBaseFilter *filter : m_Filters)
+    {
+        if (filter != nullptr)
+            delete filter;
+    }
+
+    m_Filters.clear();
 }
 //----------------------------------------------------------------------------------
 void CEeg8::SetCallback_OnStartStateChanged(void *userData, EEG_ON_START_STATE_CHANGED *callback)
@@ -842,7 +964,70 @@ void CEeg8::ProcessData(unsigned char *buf, const int &size)
     }
 
     if (m_Callback_OnReceivedData != nullptr)
+    {
+        if (!m_Filters.empty())
+        {
+            QVector<float> channels[8];
+
+            double multiply = 1.0;
+
+            /*int index = ui->comboBoxVoltage->currentIndex();
+            if(0 == index)
+            {
+                multiply = 1000000.0;
+            }
+            else if(1 == index)
+            {
+                multiply = 1000.0;
+            }*/
+
+            for (int i = 0; i < 8; i++)
+            {
+                QVector<float> &channel = channels[i];
+                channel.reserve(frameData.DataRecordsCount);
+
+                for (int j = 0; j < frameData.DataRecordsCount; j++)
+                {
+                    float value = (float)frameData.ChannelsData[j].Value[i];
+
+                    if (abs(value * 1000000) >= 374000)
+                        value = 0.0f;
+                    else
+                        value *= multiply;
+
+                    channel.push_back(value);
+                }
+            }
+
+            float *channelsPtr[8] =
+            {
+                &channels[0][0],
+                &channels[1][0],
+                &channels[2][0],
+                &channels[3][0],
+                &channels[4][0],
+                &channels[5][0],
+                &channels[6][0],
+                &channels[7][0]
+            };
+
+            for (CBaseFilter *filter : m_Filters)
+            {
+                if (filter != nullptr)
+                    filter->Process(frameData.DataRecordsCount, channelsPtr);
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                QVector<float> &channel = channels[i];
+
+                for (int j = 0; j < frameData.DataRecordsCount; j++)
+                    frameData.ChannelsData[j].Value[i] = (double)channel[j];
+            }
+        }
+
         m_Callback_OnReceivedData(m_CallbackUserData_OnReceivedData, &frameData);
+    }
 }
 //----------------------------------------------------------------------------------
 } //namespace GarantEEG
