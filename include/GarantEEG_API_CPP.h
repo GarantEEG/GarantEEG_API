@@ -32,6 +32,8 @@ public:
 
 
 
+    virtual bool IsConnecting() const = 0;
+
     virtual bool Start(bool waitForConnection = true, int rate = 500, bool protectedMode = true, const char *host = "192.168.127.125", int port = 12345) = 0;
     virtual void Stop() = 0;
     virtual bool IsStarted() const = 0;
@@ -79,8 +81,8 @@ public:
     virtual const CAbstractFilter** GetFilters() = 0;
     virtual const CAbstractFilter* AddFilter(int type, int order) = 0;
     virtual const CAbstractFilter* AddFilter(int type, int order, int channelsCount, const int *channelsList) = 0;
-    virtual bool SetupFilter(CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency) = 0;
-    virtual void RemoveFilter(CAbstractFilter *filter) = 0;
+    virtual bool SetupFilter(const CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency) = 0;
+    virtual void RemoveFilter(const CAbstractFilter *filter) = 0;
     virtual void RemoveAllFilters() = 0;
 
 

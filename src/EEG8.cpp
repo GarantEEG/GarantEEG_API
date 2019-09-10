@@ -27,9 +27,8 @@ CEeg8::CEeg8()
     m_ChannelNames.push_back("O2");
     m_ChannelNames.push_back("Po8");
 
-    /*CBaseFilter *filter = CButterworthFilter<1>::Create(1);
-    filter->Setup(500, 1, 20);
-    m_Filters.push_back(filter);*/
+    //SetupFilter(AddFilter(FT_BUTTERWORTH, 2), 500, 1, 45);
+    //SetupFilter(AddFilter(FT_BUTTERWORTH, 8), 500, 1, 30);
 }
 //----------------------------------------------------------------------------------
 CEeg8::~CEeg8()
@@ -72,7 +71,7 @@ bool CEeg8::Start(bool waitForConnection, int rate, bool protectedMode, const ch
             break;
     }
 
-    WRITE_FILE_BUFFER_SIZE = m_DataSize * 10 * 30; //30 seconds record
+    WRITE_FILE_BUFFER_SIZE = m_DataSize * 10 * 30; //10 - count of records per second, 30 seconds record
     m_ProtectedMode = protectedMode;
     m_Host = host;
     m_Port = port;
@@ -332,7 +331,7 @@ const CAbstractFilter** CEeg8::GetFilters()
 const CAbstractFilter* CEeg8::AddFilter(int type, int order)
 {
     const int channelsCount = 8;
-    const int channelsList[channelsCount] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    const int channelsList[channelsCount] = { 1, 2, 3, 4, 5, 6, 7, 8 };
 
     return AddFilter(type, order, channelsCount, channelsList);
 }
@@ -410,7 +409,7 @@ const CAbstractFilter* CEeg8::AddFilter(int type, int order, int channelsCount, 
     return filter;
 }
 //----------------------------------------------------------------------------------
-bool CEeg8::SetupFilter(CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency)
+bool CEeg8::SetupFilter(const CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency)
 {
     if (filter == nullptr)
         return false;
@@ -427,7 +426,7 @@ bool CEeg8::SetupFilter(CAbstractFilter *filter, int rate, int lowFrequency, int
     return false;
 }
 //----------------------------------------------------------------------------------
-void CEeg8::RemoveFilter(CAbstractFilter *filter)
+void CEeg8::RemoveFilter(const CAbstractFilter *filter)
 {
     for (std::vector<CBaseFilter*>::iterator i = m_Filters.begin(); i != m_Filters.end(); ++i)
     {
@@ -435,6 +434,7 @@ void CEeg8::RemoveFilter(CAbstractFilter *filter)
         {
             m_Filters.erase(i);
             delete filter;
+            break;
         }
     }
 }
@@ -649,6 +649,9 @@ void CEeg8::SocketThreadFunction(int depth)
 
     closesocket(m_Socket);
     m_Socket = INVALID_SOCKET;
+    m_Started = false;
+    m_ConnectionStage = CS_NONE;
+    m_TranslationPaused = false;
 
     if (m_Callback_OnStartStateChanged != nullptr)
         m_Callback_OnStartStateChanged(m_CallbackUserData_OnStartStateChanged, DCS_CONNECTION_CLOSED);
@@ -914,7 +917,7 @@ void CEeg8::ProcessData(unsigned char *buf, const int &size)
             {
                 //frameData.ChannelsData[j].Value[i] = (int)(unpack24BitValue(ptr) * 0.000447) / 10.0; // из кода matlab
 
-                frameData.ChannelsData[j].Value[i] = (unpack24BitValue(ptr) * 0.000447) / 10.0 / 1000.0; // /1000.0 для перевода в микровольты (из милливольт)
+                frameData.RawChannelsData[j].Value[i] = frameData.FilteredChannelsData[j].Value[i] = (unpack24BitValue(ptr) * 0.000447) / 10.0 / 1000.0; // /1000.0 для перевода в микровольты (из милливольт)
             }
         }
         else if (i < 11) //accelerometr
@@ -967,62 +970,93 @@ void CEeg8::ProcessData(unsigned char *buf, const int &size)
     {
         if (!m_Filters.empty())
         {
-            QVector<float> channels[8];
-
-            double multiply = 1.0;
-
-            /*int index = ui->comboBoxVoltage->currentIndex();
-            if(0 == index)
-            {
-                multiply = 1000000.0;
-            }
-            else if(1 == index)
-            {
-                multiply = 1000.0;
-            }*/
-
-            for (int i = 0; i < 8; i++)
-            {
-                QVector<float> &channel = channels[i];
-                channel.reserve(frameData.DataRecordsCount);
-
-                for (int j = 0; j < frameData.DataRecordsCount; j++)
-                {
-                    float value = (float)frameData.ChannelsData[j].Value[i];
-
-                    if (abs(value * 1000000) >= 374000)
-                        value = 0.0f;
-                    else
-                        value *= multiply;
-
-                    channel.push_back(value);
-                }
-            }
-
-            float *channelsPtr[8] =
-            {
-                &channels[0][0],
-                &channels[1][0],
-                &channels[2][0],
-                &channels[3][0],
-                &channels[4][0],
-                &channels[5][0],
-                &channels[6][0],
-                &channels[7][0]
-            };
-
             for (CBaseFilter *filter : m_Filters)
             {
-                if (filter != nullptr)
-                    filter->Process(frameData.DataRecordsCount, channelsPtr);
-            }
+                if (filter == nullptr)
+                    continue;
 
-            for (int i = 0; i < 8; i++)
-            {
-                QVector<float> &channel = channels[i];
+                int channelsCount = filter->ChannelsCount();
+                const int *channelsList = filter->ChannelsList();
 
-                for (int j = 0; j < frameData.DataRecordsCount; j++)
-                    frameData.ChannelsData[j].Value[i] = (double)channel[j];
+                if (channelsCount < 1 || channelsList == nullptr)
+                    continue;
+
+                bool error = false;
+                float *channels[8];
+                //QVector< QVector<float> > channels;
+                //QVector<float*> channelsPtr;
+
+                for (int i = 0; i < channelsCount; i++)
+                {
+                    channels[i] = new float[frameData.DataRecordsCount];
+                    //channels.push_back(QVector<float>());
+                }
+
+                double multiply = 1.0;
+
+                /*double multiply = 1.0;
+
+                int index = ui->comboBoxVoltage->currentIndex();
+                if(0 == index)
+                {
+                    multiply = 1000000.0;
+                }
+                else if(1 == index)
+                {
+                    multiply = 1000.0;
+                }*/
+
+                for (int i = 0; i < channelsCount; i++)
+                {
+                    uint channelIndex = channelsList[i] - 1;
+
+                    if (channelIndex >= 8)
+                    {
+                        error = true;
+                        break;
+                    }
+
+                    //QVector<float> &channel = channels[i];
+                    //channel.reserve(frameData.DataRecordsCount);
+
+                    for (int j = 0; j < frameData.DataRecordsCount; j++)
+                    {
+                        float value = (float)frameData.RawChannelsData[j].Value[channelIndex];
+
+                        if (abs(value * 1000000) >= 374000)
+                            value = 0.0f;
+                        else
+                            value *= multiply;
+
+                        channels[i][j] = value;
+                        //channel.push_back(value);
+                    }
+
+                    //channelsPtr.push_back(&channels[i][0]);
+                }
+
+                if (error)
+                    continue;
+
+                //filter->Process(frameData.DataRecordsCount, &channelsPtr[0]);
+                filter->Process(frameData.DataRecordsCount, channels);
+
+                for (int i = 0; i < channelsCount; i++)
+                {
+                    int channelIndex = channelsList[i] - 1;
+                    //QVector<float> &channel = channels[i];
+
+                    for (int j = 0; j < frameData.DataRecordsCount; j++)
+                    {
+                        //frameData.ChannelsData[j].Value[channelIndex] = (double)channel[j];
+                        frameData.FilteredChannelsData[j].Value[channelIndex] = (double)channels[i][j];
+                    }
+                }
+
+                for (int i = 0; i < channelsCount; i++)
+                {
+                     delete[] channels[i];
+                }
             }
         }
 

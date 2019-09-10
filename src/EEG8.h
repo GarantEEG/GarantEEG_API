@@ -170,6 +170,8 @@ public:
 
 
 
+    virtual bool IsConnecting() const { return (m_ConnectionStage == CS_CONNECTING); }
+
     virtual bool Start(bool waitForConnection = true, int rate = 500, bool protectedMode = true, const char *host = "192.168.127.125", int port = 12345) override;
     virtual void Stop() override;
     virtual bool IsStarted() const override { return m_Started; }
@@ -217,8 +219,8 @@ public:
     virtual const CAbstractFilter** GetFilters() override;
     virtual const CAbstractFilter* AddFilter(int type, int order) override;
     virtual const CAbstractFilter* AddFilter(int type, int order, int channelsCount, const int *channelsList) override;
-    virtual bool SetupFilter(CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency) override;
-    virtual void RemoveFilter(CAbstractFilter *filter) override;
+    virtual bool SetupFilter(const CAbstractFilter *filter, int rate, int lowFrequency, int hightFrequency) override;
+    virtual void RemoveFilter(const CAbstractFilter *filter) override;
     virtual void RemoveAllFilters() override;
 
 

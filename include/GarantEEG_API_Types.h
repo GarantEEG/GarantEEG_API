@@ -119,8 +119,11 @@ struct GARANT_EEG_DATA
     //! Channels data records count
     int DataRecordsCount;
 
-    //! Channels data array (real size is DataRecordsCount)
-    GARANT_EEG_CHANNELS_DATA ChannelsData[100];
+    //! Channels raw data array (real size is DataRecordsCount)
+    GARANT_EEG_CHANNELS_DATA RawChannelsData[100];
+
+    //! Channels filtered data array (real size is DataRecordsCount)
+    GARANT_EEG_CHANNELS_DATA FilteredChannelsData[100];
 
     //! Resistance data
     GARANT_EEG_RESISTANCE_DATA ResistanceData;
