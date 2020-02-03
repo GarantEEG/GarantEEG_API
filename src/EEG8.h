@@ -61,7 +61,6 @@ protected:
     int m_BatteryStatus = 0;
     string m_FirmwareVersion = "";
     int m_Rate = 500;
-    bool m_ProtectedMode = true;
     string m_Host = "192.168.127.125";
     int m_Port = 12345;
     string m_RecordFileName = "";
@@ -172,7 +171,7 @@ public:
 
     virtual bool IsConnecting() const { return (m_ConnectionStage == CS_CONNECTING); }
 
-    virtual bool Start(bool waitForConnection = true, int rate = 500, bool protectedMode = true, const char *host = "192.168.127.125", int port = 12345) override;
+    virtual bool Start(bool waitForConnection = true, int rate = 500, const char *host = "192.168.127.125", int port = 12345) override;
     virtual void Stop() override;
     virtual bool IsStarted() const override { return m_Started; }
     virtual bool IsPaused() const override { return m_TranslationPaused; }
@@ -204,8 +203,6 @@ public:
     virtual void PowerOff() override;
 
     virtual void SynchronizationWithNTP() override;
-
-    virtual bool IsProtectedMode() const override { return m_ProtectedMode; }
 
     virtual int GetRate() const override { return m_Rate; }
 

@@ -36,7 +36,7 @@ CEeg8::~CEeg8()
     RemoveAllFilters();
 }
 //----------------------------------------------------------------------------------
-bool CEeg8::Start(bool waitForConnection, int rate, bool protectedMode, const char *host, int port)
+bool CEeg8::Start(bool waitForConnection, int rate, const char *host, int port)
 {
     if (m_Started || m_ConnectionStage == CS_CONNECTED)
         return true;
@@ -72,7 +72,6 @@ bool CEeg8::Start(bool waitForConnection, int rate, bool protectedMode, const ch
     }
 
     WRITE_FILE_BUFFER_SIZE = m_DataSize * 10 * 30; //10 - count of records per second, 30 seconds record
-    m_ProtectedMode = protectedMode;
     m_Host = host;
     m_Port = port;
     m_NTPMessage = "";
@@ -259,10 +258,7 @@ void CEeg8::StartDataTranslation()
 {
     if (m_Started && !m_Recording && m_TranslationPaused)
     {
-        if (m_ProtectedMode)
-            SendPacket("start -protect eeg.rate " + std::to_string(m_Rate) + "\r\n");
-        else
-            SendPacket("start eeg.rate " + std::to_string(m_Rate) + "\r\n");
+        SendPacket("start -protect eeg.rate " + std::to_string(m_Rate) + "\r\n");
 
         m_TranslationPaused = false;
 
@@ -573,10 +569,7 @@ void CEeg8::SocketThreadFunction(int depth)
 
     m_Started = true;
 
-    if (m_ProtectedMode)
-        SendPacket("start -protect eeg.rate " + std::to_string(m_Rate) + "\r\n");
-    else
-        SendPacket("start eeg.rate " + std::to_string(m_Rate) + "\r\n");
+    SendPacket("start -protect eeg.rate " + std::to_string(m_Rate) + "\r\n");
 
     if (depth)
     {
@@ -729,14 +722,8 @@ void CEeg8::DataReceived()
         }
     }
 
-    int wantLength = m_HeaderSize;
-    int realDataOffset = 0;
-
-    if (m_ProtectedMode)
-    {
-        realDataOffset = 8;
-        wantLength += 12;
-    }
+    int wantLength = m_HeaderSize + 12;
+    int realDataOffset = 8;
 
     const string validationErrorMessages[] =
     {
@@ -758,33 +745,30 @@ void CEeg8::DataReceived()
         {
             qDebug() << "header processed";
 
-            if (m_ProtectedMode)
+            GARANT_EEG_PACKET_VALIDATE_TYPE validateState = ValidatePacket((unsigned char*)&m_RecvBuffer[0], wantLength, PDT_HEADER);
+
+            if (validateState != PVT_VALIDATED)
             {
-                GARANT_EEG_PACKET_VALIDATE_TYPE validateState = ValidatePacket((unsigned char*)&m_RecvBuffer[0], wantLength, PDT_HEADER);
+                int skippedCount = 0;
 
-                if (validateState != PVT_VALIDATED)
+                skippedCount = 1;
+                m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + 1);
+
+                while ((int)m_RecvBuffer.size() >= wantLength && UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) != 0x55AA55AA)
                 {
-                    int skippedCount = 0;
-
-                    skippedCount = 1;
                     m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + 1);
-
-                    while ((int)m_RecvBuffer.size() >= wantLength && UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) != 0x55AA55AA)
-                    {
-                        m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + 1);
-                        skippedCount++;
-                    }
-
-                    if (validateState != PVT_BAD_COUNTER)
-                    {
-                        if (UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) == 0x55AA55AA)
-                            qDebug() << "header validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes to correct ID";
-                        else
-                            qDebug() << "header validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes";
-                    }
-
-                    continue;
+                    skippedCount++;
                 }
+
+                if (validateState != PVT_BAD_COUNTER)
+                {
+                    if (UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) == 0x55AA55AA)
+                        qDebug() << "header validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes to correct ID";
+                    else
+                        qDebug() << "header validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes";
+                }
+
+                continue;
             }
 
             m_HeaderData.insert(m_HeaderData.end(), m_RecvBuffer.begin() + realDataOffset, m_RecvBuffer.begin() + realDataOffset + m_HeaderSize);
@@ -797,61 +781,55 @@ void CEeg8::DataReceived()
             return;
     }
 
-    wantLength = m_DataSize;
-
-    if (m_ProtectedMode)
-        wantLength += 12;
+    wantLength = m_DataSize + 12;
 
     while ((int)m_RecvBuffer.size() >= wantLength)
     {
-        if (m_ProtectedMode)
+        GARANT_EEG_PACKET_VALIDATE_TYPE validateState = ValidatePacket((unsigned char*)&m_RecvBuffer[0], wantLength, PDT_DATA);
+
+        unsigned char counter = ((unsigned char*)&m_RecvBuffer[0])[7];
+
+        //qDebug() << "protected, counter:" << counter << " prevCounter: " << m_PrevCounter;
+
+        if (validateState != PVT_VALIDATED)
         {
-            GARANT_EEG_PACKET_VALIDATE_TYPE validateState = ValidatePacket((unsigned char*)&m_RecvBuffer[0], wantLength, PDT_DATA);
+            //unsigned char badType = ((unsigned char*)&m_RecvBuffer[0])[6];
 
-            unsigned char counter = ((unsigned char*)&m_RecvBuffer[0])[7];
+            int skippedCount = 0;
 
-            //qDebug() << "protected, counter:" << counter << " prevCounter: " << m_PrevCounter;
-
-            if (validateState != PVT_VALIDATED)
+            if (validateState != PVT_BAD_COUNTER)
             {
-                //unsigned char badType = ((unsigned char*)&m_RecvBuffer[0])[6];
+                skippedCount = 1;
+                m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + 1);
 
-                int skippedCount = 0;
-
-                if (validateState != PVT_BAD_COUNTER)
+                while ((int)m_RecvBuffer.size() >= wantLength && UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) != 0x55AA55AA)
                 {
-                    skippedCount = 1;
                     m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + 1);
-
-                    while ((int)m_RecvBuffer.size() >= wantLength && UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) != 0x55AA55AA)
-                    {
-                        m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + 1);
-                        skippedCount++;
-                    }
-                }
-
-                if (UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) == 0x55AA55AA)
-                    qDebug() << "data validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes to correct ID, counter:" << counter << " prevCounter: " << m_PrevCounter;
-                else
-                    qDebug() << "data validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes, counter:" << counter << " prevCounter: " << m_PrevCounter;
-
-                if (validateState != PVT_BAD_COUNTER)
-                {
-                    if (!m_PrevData.empty() && m_PrevCounter != counter)
-                    {
-                        m_PrevCounter = counter;
-                        ProcessData((unsigned char*)&m_PrevData[0], m_PrevData.size());
-
-                        m_PrevData.clear();
-                        m_PrevData.insert(m_PrevData.end(), m_PrevData.begin(), m_PrevData.begin() + m_PrevData.size());
-                    }
-
-                    continue;
+                    skippedCount++;
                 }
             }
 
-            m_PrevCounter = counter;
+            if (UnpackUInt32LE((unsigned char*)&m_RecvBuffer[0]) == 0x55AA55AA)
+                qDebug() << "data validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes to correct ID, counter:" << counter << " prevCounter: " << m_PrevCounter;
+            else
+                qDebug() << "data validation failed! code:" << validateState << "(" << validationErrorMessages[validateState].c_str() << "), skiped" << skippedCount << "bytes, counter:" << counter << " prevCounter: " << m_PrevCounter;
+
+            if (validateState != PVT_BAD_COUNTER)
+            {
+                if (!m_PrevData.empty() && m_PrevCounter != counter)
+                {
+                    m_PrevCounter = counter;
+                    ProcessData((unsigned char*)&m_PrevData[0], m_PrevData.size());
+
+                    m_PrevData.clear();
+                    m_PrevData.insert(m_PrevData.end(), m_PrevData.begin(), m_PrevData.begin() + m_PrevData.size());
+                }
+
+                continue;
+            }
         }
+
+        m_PrevCounter = counter;
 
         ProcessData((unsigned char*)&m_RecvBuffer[0] + realDataOffset, m_DataSize);
 

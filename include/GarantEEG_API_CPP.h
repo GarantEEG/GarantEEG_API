@@ -34,7 +34,7 @@ public:
 
     virtual bool IsConnecting() const = 0;
 
-    virtual bool Start(bool waitForConnection = true, int rate = 500, bool protectedMode = true, const char *host = "192.168.127.125", int port = 12345) = 0;
+    virtual bool Start(bool waitForConnection = true, int rate = 500, const char *host = "192.168.127.125", int port = 12345) = 0;
     virtual void Stop() = 0;
     virtual bool IsStarted() const = 0;
     virtual bool IsPaused() const = 0;
@@ -66,8 +66,6 @@ public:
     virtual void PowerOff() = 0;
 
     virtual void SynchronizationWithNTP() = 0;
-
-    virtual bool IsProtectedMode() const = 0;
 
     virtual int GetRate() const = 0;
 
