@@ -14,13 +14,28 @@
 namespace GarantEEG
 {
 //----------------------------------------------------------------------------------
+//! Базовый класс для работы с фильтрами
 class CBaseFilter : public CAbstractFilter
 {
 public:
+	/**
+	 * @brief ~CBaseFilter Деструктор
+	 */
     virtual ~CBaseFilter() {}
 
+	/**
+	 * @brief Setup Функция установки настроек фильтра
+	 * @param rate Рабочая частота
+	 * @param lowFrequency Нижняя планка среза
+	 * @param hightFrequency Верхняя планка среза
+	 */
     virtual void Setup(int rate, int lowFrequency, int hightFrequency) = 0;
 
+	/**
+	 * @brief Process Функция фильтрации данных
+	 * @param count Количетво данных
+	 * @param samples Указатель на список данных по каналам
+	 */
     virtual void Process(int count, float **samples) = 0;
 };
 //----------------------------------------------------------------------------------

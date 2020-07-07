@@ -5,154 +5,152 @@
 
 @author Мустакимов Т.Р.
 **/
-
+//----------------------------------------------------------------------------------
 #ifndef GARANT_EEG_API_TYPES_H
 #define GARANT_EEG_API_TYPES_H
 //----------------------------------------------------------------------------------
-//! global namespace
 namespace GarantEEG
 {
 //----------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////////
-//! Main enumarations
+//! Основные перечисления
 ////////////////////////////////////////////////////////////////////////////////////
-//! Main device types
+//! Перечисление доступных устройств для работы
 enum GARANT_EEG_DEVICE_TYPE
 {
-    //! Base class for working with GarantEEG device
-    DT_GARANT = 0,
-    //! Class for working with GarantEEG_MAP device
-    DT_GARANT_MAP,
-    //! Second version of GarandEEG_MAP device (helmet version 2)
-    DT_GARANT_MAP_V2
+	//! Базовый класс для работы с устройством GarantEEG
+	DT_GARANT = 0
 };
 //----------------------------------------------------------------------------------
-//! Main filter types
+//! Основные типы фильтров
 enum GARANT_EEG_FILTER_TYPE
 {
-    //! Unknown filter
+	//! Неизвестный фильтр, не валидно
     FT_UNKNOWN = 0,
-    //! Butterworth frequency filter
+	//! Частотный фильтр Butterworth
     FT_BUTTERWORTH
 };
 //----------------------------------------------------------------------------------
-//! Device connection state
+//! Состояния подключения к устройству
 enum GARANT_EEG_DEVICE_CONNECTION_STATE
 {
-    //! No error, connected
+	//! Нет ошибок, подключены
     DCS_NO_ERROR = 0,
-    //! Socket creation error
+	//! Ошибка создания сокета
     DCS_CREATE_SOCKET_ERROR,
-    //! Host not found
+	//! Указанный хост не найден
     DCS_HOST_NOT_FOUND,
-    //! Host not reached
+	//! Указанный хост недоступен
     DCS_HOST_NOT_REACHED,
-    //! An error occurred while receiving
+	//! Ошибка во время получения данных
     DCS_RECEIVE_ERROR,
-    //! Connection closed
+	//! Подключение разорвано
     DCS_CONNECTION_CLOSED = 10000,
-    //! Data stream transplation is paused
+	//! Стрим данных приостановлен
     DCS_TRANSLATION_PAUSED,
-    //! Data stream transplation is resumed
+	//! Стрим данных возобновлен
     DCS_TRANSLATION_RESUMED
 };
 //----------------------------------------------------------------------------------
-//! Device reording state
+//! Состояния записи данных в файл
 enum GARANT_EEG_DEVICE_RECORDING_STATE
 {
-    //! No error, record is started
+	//! Нет ошибок, запись началась
     DRS_NO_ERROR = 0,
-    //! File creation error
+	//! Ошибка создания файла
     DRS_CREATE_FILE_ERROR,
-    //! BDF header is not received
+	//! Не получен заголовок BDF файла с устройства
     DRS_HEADER_NOT_FOUND,
-    //! Record is paused
+	//! Запись данных в файл приостановлена
     DRS_RECORD_PAUSED = 10000,
-    //! Record is resumed
+	//! Запись данных в файл возобновлена
     DRS_RECORD_RESUMED,
-    //! Record is stopped
+	//! Запись данных в файл остановлена
     DRS_RECORD_STOPPED
 };
 //----------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////////
-//! Main structures
+//! Основные структуры
 ////////////////////////////////////////////////////////////////////////////////////
-//! Channels data structure
+//! Структура с данными по каналам
 struct GARANT_EEG_CHANNELS_DATA
 {
-    //! Values for 8 channels
+	//! Значения для 8 каналов
     double Value[8];
 };
 //----------------------------------------------------------------------------------
-//! Resistance data structure
+//! Структура с данными по сопротивлению
 struct GARANT_EEG_RESISTANCE_DATA
 {
-    //! Values for 8 channels
+	//! Значения для 8 каналов
     double Value[8];
 
-    //! Values for ref/mastoids
+	//! Значение референта
     double Ref;
 
-    //! Values for ground
+	//! Значение земли
     double Ground;
 };
 //----------------------------------------------------------------------------------
-//! Accelerometer data structure
+//! Структура с данными по акселерометру
 struct GARANT_EEG_ACCELEROMETR_DATA
 {
-    //! X-axis value
+	//! Значение по оси X
     double X;
 
-    //! Y-axis value
+	//! Значение по оси Y
     double Y;
 
-    //! Z-axis value
+	//! Значение по оси Z
     double Z;
 };
 //----------------------------------------------------------------------------------
-//! GarantEEG frame data
+//! Структура с данными фрэйма GarantEEG
 struct GARANT_EEG_DATA
 {
-    //! Timestamp for current packet
+	//! Метка времени текущего пакета
     double Time;
 
-    //! Channels data records count
+	//! Количество наборов данных по каналам
     int DataRecordsCount;
 
-    //! Channels raw data array (real size is DataRecordsCount)
+	//! Сырые данные по каналам (реальное количество - DataRecordsCount)
     GARANT_EEG_CHANNELS_DATA RawChannelsData[100];
 
-    //! Channels filtered data array (real size is DataRecordsCount)
+	//! Отфильтрованные с помощью установленных частотных фильтров данные по каналам (реальное количество - DataRecordsCount)
     GARANT_EEG_CHANNELS_DATA FilteredChannelsData[100];
 
-    //! Resistance data
+	//! Данные по сопротивлению
     GARANT_EEG_RESISTANCE_DATA ResistanceData;
 
-    //!Accelerometer data
+	//! Данные акселерометра
     GARANT_EEG_ACCELEROMETR_DATA AccelerometrData[5];
 
-    //! Annotations for current packet
+	//! Аннотации к текущему фрэйму
     char Annitations[30];
 };
 //----------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////////
-//! Main callback types definition
+//! Объявление типов коллбэков
 ////////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief EEG_ON_START_STATE_CHANGED Emitted on device connection state changed
- * @param State from GARANT_EEG_DEVICE_CONNECTION_STATE
+ * @brief EEG_ON_START_STATE_CHANGED Изменение состояния подключения
+ * @param userData данные пользователя
+ * @param state состояние из перечисления GARANT_EEG_DEVICE_CONNECTION_STATE
  */
 typedef void __cdecl EEG_ON_START_STATE_CHANGED(void* /*userData*/, unsigned int /*state*/);
 //----------------------------------------------------------------------------------
 /**
- * @brief EEG_ON_RECORDING_STATE_CHANGED Emitted on device recording state changed
- * @param State from GARANT_EEG_DEVICE_RECORDING_STATE
+ * @brief EEG_ON_RECORDING_STATE_CHANGED Изменение состояния записи данных в файл
+ * @param userData данные пользователя
+ * @param state состояние из перечисления GARANT_EEG_DEVICE_RECORDING_STATE
  */
 typedef void __cdecl EEG_ON_RECORDING_STATE_CHANGED(void* /*userData*/, unsigned int /*state*/);
 //----------------------------------------------------------------------------------
 /**
- * @brief EEG_ON_RECEIVED_DATA Emitted on new data received
- * @param eegData EEG data
+ * @brief EEG_ON_RECEIVED_DATA Приход новой порции данных с устройства
+ * @param userData данные пользователя
+ * @param eegData Указатель на фрэйм данных ЭЭГ
  */
 typedef void __cdecl EEG_ON_RECEIVED_DATA(void* /*userData*/, const GARANT_EEG_DATA* /*eegData*/);
 //----------------------------------------------------------------------------------

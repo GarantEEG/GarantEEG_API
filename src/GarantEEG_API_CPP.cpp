@@ -18,8 +18,6 @@ extern "C" __declspec(dllexport) IGarantEEG* __cdecl CreateDevice(GARANT_EEG_DEV
     {
         case DT_GARANT:
             return new CEeg8();
-        case DT_GARANT_MAP:
-        case DT_GARANT_MAP_V2:
         default:
             break;
     }
