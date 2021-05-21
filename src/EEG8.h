@@ -290,7 +290,7 @@ public:
 	 * @brief IsConnecting Получение состояния подключения устройства
 	 * @return true
 	 */
-    virtual bool IsConnecting() const { return (m_ConnectionStage == CS_CONNECTING); }
+	virtual bool IsConnecting() const override { return (m_ConnectionStage == CS_CONNECTING); }
 
 	/**
 	 * @brief Start Функция старта работы с устройством

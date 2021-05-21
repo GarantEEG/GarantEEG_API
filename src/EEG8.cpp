@@ -908,7 +908,16 @@ void CEeg8::ProcessData(unsigned char *buf, const int &size)
 
             for (int j = 0; j < 1; j++, ptr += 3)
             {
-                frameData.ResistanceData.Value[i - 11] = (int)(unpack24BitValue(ptr) * 0.0677) / 10.0;
+				double val = (unpack24BitValue(ptr) * 0.0677) / 10.0;
+
+				int pos = i - 11;
+
+				if (pos < 8)
+					frameData.ResistanceData.Value[pos] = val;
+				else if (pos == 8)
+					frameData.ResistanceData.Ref = val;
+				else
+					frameData.ResistanceData.Ground = val;
             }
         }
         else

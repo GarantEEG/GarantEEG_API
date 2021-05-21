@@ -26,47 +26,47 @@ enum GARANT_EEG_DEVICE_TYPE
 enum GARANT_EEG_FILTER_TYPE
 {
 	//! Неизвестный фильтр, не валидно
-    FT_UNKNOWN = 0,
+	FT_UNKNOWN = 0,
 	//! Частотный фильтр Butterworth
-    FT_BUTTERWORTH
+	FT_BUTTERWORTH
 };
 //----------------------------------------------------------------------------------
 //! Состояния подключения к устройству
 enum GARANT_EEG_DEVICE_CONNECTION_STATE
 {
 	//! Нет ошибок, подключены
-    DCS_NO_ERROR = 0,
+	DCS_NO_ERROR = 0,
 	//! Ошибка создания сокета
-    DCS_CREATE_SOCKET_ERROR,
+	DCS_CREATE_SOCKET_ERROR,
 	//! Указанный хост не найден
-    DCS_HOST_NOT_FOUND,
+	DCS_HOST_NOT_FOUND,
 	//! Указанный хост недоступен
-    DCS_HOST_NOT_REACHED,
+	DCS_HOST_NOT_REACHED,
 	//! Ошибка во время получения данных
-    DCS_RECEIVE_ERROR,
+	DCS_RECEIVE_ERROR,
 	//! Подключение разорвано
-    DCS_CONNECTION_CLOSED = 10000,
+	DCS_CONNECTION_CLOSED = 10000,
 	//! Стрим данных приостановлен
-    DCS_TRANSLATION_PAUSED,
+	DCS_TRANSLATION_PAUSED,
 	//! Стрим данных возобновлен
-    DCS_TRANSLATION_RESUMED
+	DCS_TRANSLATION_RESUMED
 };
 //----------------------------------------------------------------------------------
 //! Состояния записи данных в файл
 enum GARANT_EEG_DEVICE_RECORDING_STATE
 {
 	//! Нет ошибок, запись началась
-    DRS_NO_ERROR = 0,
+	DRS_NO_ERROR = 0,
 	//! Ошибка создания файла
-    DRS_CREATE_FILE_ERROR,
+	DRS_CREATE_FILE_ERROR,
 	//! Не получен заголовок BDF файла с устройства
-    DRS_HEADER_NOT_FOUND,
+	DRS_HEADER_NOT_FOUND,
 	//! Запись данных в файл приостановлена
-    DRS_RECORD_PAUSED = 10000,
+	DRS_RECORD_PAUSED = 10000,
 	//! Запись данных в файл возобновлена
-    DRS_RECORD_RESUMED,
+	DRS_RECORD_RESUMED,
 	//! Запись данных в файл остановлена
-    DRS_RECORD_STOPPED
+	DRS_RECORD_STOPPED
 };
 //----------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////////
@@ -76,58 +76,58 @@ enum GARANT_EEG_DEVICE_RECORDING_STATE
 struct GARANT_EEG_CHANNELS_DATA
 {
 	//! Значения для 8 каналов
-    double Value[8];
+	double Value[8];
 };
 //----------------------------------------------------------------------------------
 //! Структура с данными по сопротивлению
 struct GARANT_EEG_RESISTANCE_DATA
 {
 	//! Значения для 8 каналов
-    double Value[8];
+	double Value[8];
 
 	//! Значение референта
-    double Ref;
+	double Ref;
 
 	//! Значение земли
-    double Ground;
+	double Ground;
 };
 //----------------------------------------------------------------------------------
 //! Структура с данными по акселерометру
 struct GARANT_EEG_ACCELEROMETR_DATA
 {
 	//! Значение по оси X
-    double X;
+	double X;
 
 	//! Значение по оси Y
-    double Y;
+	double Y;
 
 	//! Значение по оси Z
-    double Z;
+	double Z;
 };
 //----------------------------------------------------------------------------------
 //! Структура с данными фрэйма GarantEEG
 struct GARANT_EEG_DATA
 {
 	//! Метка времени текущего пакета
-    double Time;
+	double Time;
 
 	//! Количество наборов данных по каналам
-    int DataRecordsCount;
+	int DataRecordsCount;
 
 	//! Сырые данные по каналам (реальное количество - DataRecordsCount)
-    GARANT_EEG_CHANNELS_DATA RawChannelsData[100];
+	GARANT_EEG_CHANNELS_DATA RawChannelsData[100];
 
 	//! Отфильтрованные с помощью установленных частотных фильтров данные по каналам (реальное количество - DataRecordsCount)
-    GARANT_EEG_CHANNELS_DATA FilteredChannelsData[100];
+	GARANT_EEG_CHANNELS_DATA FilteredChannelsData[100];
 
 	//! Данные по сопротивлению
-    GARANT_EEG_RESISTANCE_DATA ResistanceData;
+	GARANT_EEG_RESISTANCE_DATA ResistanceData;
 
 	//! Данные акселерометра
-    GARANT_EEG_ACCELEROMETR_DATA AccelerometrData[5];
+	GARANT_EEG_ACCELEROMETR_DATA AccelerometrData[5];
 
 	//! Аннотации к текущему фрэйму
-    char Annitations[30];
+	char Annitations[30];
 };
 //----------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////////
